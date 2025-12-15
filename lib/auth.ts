@@ -11,8 +11,34 @@ export const authOptions: NextAuthOptions = {
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         }),
-        // Fallback for demo if no google creds - careful with this in prod
-        // CredentialsProvider(...) could be added here
+        CredentialsProvider({
+            name: "Credentials",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" }
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null
+
+                const user = await prisma.user.findUnique({
+                    where: { email: credentials.email }
+                })
+
+                if (!user) return null
+
+                // Simple password check for the seed user (Production app should use bcrypt)
+                if (credentials.password === user.password) {
+                    return {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        role: user.role,
+                    }
+                }
+
+                return null
+            }
+        })
     ],
     callbacks: {
         async session({ session, user, token }) {
