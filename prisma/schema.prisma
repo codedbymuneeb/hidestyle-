@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Uses connection pooling
+  directUrl = env("DIRECT_URL") // Uses direct connection (optional but recommended for Vercel/Supabase)
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String?  // nullable if using OAuth only
+  role      String   @default("user") // "user" or "admin"
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique
+  subcategories Subcategory[]
+  createdAt     DateTime      @default(now())
+  products      Product[]
+}
+
+model Subcategory {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  categoryId String
+  category  Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id            String       @id @default(cuid())
+  title         String
+  slug          String       @unique
+  description   String?
+  price         Int          // stored in cents
+  images        String       // JSON stringified array of URLs (SQLite workaround)
+  sizes         String?      // JSON stringified array of sizes (e.g. ["UK 8", "UK 9"])
+  colors        String?      // JSON stringified array of colors (e.g. ["Red", "Black"])
+  inventory     Int          @default(0)
+  categoryId    String
+  category      Category     @relation(fields: [categoryId], references: [id])
+  subcategoryId String?
+  subcategory   Subcategory? @relation(fields: [subcategoryId], references: [id])
+  createdAt     DateTime     @default(now())
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  items           String   // JSON stringified inputs
+  total           Int      // stored in cents
+  status          String   @default("pending") // pending, paid, shipped, etc.
+  stripeSessionId String?  @unique
+  
+  // COD / Guest Checkout fields
+  customerName    String?
+  customerEmail   String?
+  customerPhone   String?
+  shippingAddress String?
+  paymentMethod   String   @default("card")
+
+  createdAt       DateTime @default(now())
+}
