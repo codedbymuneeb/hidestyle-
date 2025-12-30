@@ -26,6 +26,7 @@ interface Product {
     subcategory: {
         name: string
     } | null
+    status: string
 }
 
 export default function AdminProductsPage() {
@@ -116,13 +117,14 @@ export default function AdminProductsPage() {
                             <TableHead>Subcategory</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Inventory</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {products.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                                <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
                                     No products found. Create one to get started.
                                 </TableCell>
                             </TableRow>
@@ -142,6 +144,14 @@ export default function AdminProductsPage() {
                                     </TableCell>
                                     <TableCell>${(product.price / 100).toFixed(2)}</TableCell>
                                     <TableCell>{product.inventory}</TableCell>
+                                    <TableCell>
+                                        <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${product.status === 'published'
+                                            ? 'bg-primary text-primary-foreground hover:bg-primary/80'
+                                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                            }`}>
+                                            {product.status || 'draft'}
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <Button

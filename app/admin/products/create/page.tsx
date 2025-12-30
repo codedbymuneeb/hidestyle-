@@ -1,245 +1,203 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
-
-interface Subcategory {
-    id: string
-    name: string
-    slug: string
-}
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/components/ui/use-toast'
+import { Loader2, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
 interface Category {
     id: string
     name: string
-    slug: string
-    subcategories: Subcategory[]
+    subcategories: { id: string; name: string }[]
 }
 
-const AVAILABLE_SIZES = ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12']
-const AVAILABLE_COLORS = ['Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Grey']
-
 export default function CreateProductPage() {
+    const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(false)
-    const [uploading, setUploading] = useState(false)
     const [categories, setCategories] = useState<Category[]>([])
-    const [selectedCategory, setSelectedCategory] = useState<string>('')
-    const [availableSubcategories, setAvailableSubcategories] = useState<Subcategory[]>([])
-    const [imageUrl, setImageUrl] = useState<string>('')
-    const [selectedSizes, setSelectedSizes] = useState<string[]>([])
-    const [selectedColors, setSelectedColors] = useState<string[]>([])
 
-    // Fetch categories on mount
+    // Form State
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        price: '',
+        inventory: '',
+        slug: '',
+        categoryId: '',
+        subcategoryId: '',
+        imageUrl: '',
+        status: 'draft' // Default to draft
+    })
+
+    // Fetch Categories for Select
     useEffect(() => {
-        fetch('/api/admin/categories')
-            .then(res => res.json())
-            .then(data => setCategories(data))
-            .catch(err => console.error('Failed to fetch categories', err))
+        async function fetchCats() {
+            const res = await fetch('/api/categories') // Ensure this API exists or use server action
+            if (res.ok) {
+                const data = await res.json()
+                setCategories(data)
+            }
+        }
+        fetchCats()
     }, [])
 
-    // Update subcategories when category changes
-    useEffect(() => {
-        if (selectedCategory) {
-            const category = categories.find(c => c.id === selectedCategory)
-            setAvailableSubcategories(category ? category.subcategories : [])
-        } else {
-            setAvailableSubcategories([])
-        }
-    }, [selectedCategory, categories])
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
 
-    async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        setUploading(true)
-        try {
-            const formData = new FormData()
-            formData.append('file', file)
-
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            })
-
-            if (!res.ok) throw new Error('Upload failed')
-
-            const data = await res.json()
-            setImageUrl(data.url)
-        } catch (error) {
-            console.error(error)
-            alert('Image upload failed')
-        } finally {
-            setUploading(false)
+        // Auto-generate slug from title if empty
+        if (name === 'title' && !formData.slug) {
+            setFormData(prev => ({
+                ...prev,
+                slug: value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+            }))
         }
     }
 
-    function toggleSize(size: string) {
-        setSelectedSizes(prev =>
-            prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
-        )
-    }
-
-    function toggleColor(color: string) {
-        setSelectedColors(prev =>
-            prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]
-        )
-    }
-
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
-        const formData = new FormData(e.currentTarget)
-        const data: any = Object.fromEntries(formData.entries())
-
-        // Add image URL and sizes/colors
-        data.images = imageUrl
-        data.sizes = JSON.stringify(selectedSizes)
-        data.colors = JSON.stringify(selectedColors)
 
         try {
             const res = await fetch('/api/products', {
                 method: 'POST',
-                body: JSON.stringify(data)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...formData,
+                    price: Math.round(parseFloat(formData.price) * 100), // Convert to cents
+                    images: formData.imageUrl, // Single image for now as per prompt "Image Upload" (URL)
+                })
             })
-            if (!res.ok) throw new Error('Failed to create product')
 
-            window.location.href = '/admin/products'
-        } catch (error) {
-            console.error(error)
-            alert('Error creating product. Please check your inputs.')
+            if (!res.ok) {
+                if (res.status === 401) throw new Error("Unauthorized: Admin Access Only")
+                throw new Error('Failed to create product')
+            }
+
+            toast({
+                title: 'Success',
+                description: 'Product created successfully',
+                variant: 'success'
+            })
+            router.push('/admin/products')
+            router.refresh()
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error.message,
+                variant: 'destructive'
+            })
         } finally {
             setLoading(false)
         }
     }
 
+    const selectedCategory = categories.find(c => c.id === formData.categoryId)
+
     return (
-        <div className="max-w-2xl mx-auto space-y-8 pb-12">
-            <h1 className="text-2xl font-bold">Add New Product</h1>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Product Title</label>
-                    <Input name="title" required placeholder="Air Max 90" />
+        <div className="max-w-2xl mx-auto space-y-8">
+            <div className="flex items-center gap-4">
+                <Link href="/admin/products">
+                    <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+                </Link>
+                <h1 className="text-3xl font-bold tracking-tight">Create Product</h1>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6 border p-6 rounded-lg bg-card">
+                <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" name="title" value={formData.title} onChange={handleChange} required placeholder="Product Name" />
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Description</label>
-                    <textarea
-                        name="description"
-                        required
-                        placeholder="Premium running shoe with responsive cushioning..."
-                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
+                <div className="grid gap-2">
+                    <Label htmlFor="slug">Slug</Label>
+                    <Input id="slug" name="slug" value={formData.slug} onChange={handleChange} required placeholder="product-url-slug" />
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Slug</label>
-                    <Input name="slug" required placeholder="air-max-90" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Price (in cents)</label>
-                        <Input name="price" type="number" required placeholder="2999" />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Inventory</label>
-                        <Input name="inventory" type="number" required placeholder="100" />
-                    </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea id="description" name="description" value={formData.description} onChange={handleChange} placeholder="Product details..." />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Category</label>
+                    <div className="grid gap-2">
+                        <Label htmlFor="price">Price ($)</Label>
+                        <Input id="price" name="price" type="number" step="0.01" value={formData.price} onChange={handleChange} required placeholder="0.00" />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="inventory">Inventory</Label>
+                        <Input id="inventory" name="inventory" type="number" value={formData.inventory} onChange={handleChange} required placeholder="0" />
+                    </div>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="imageUrl">Image URL</Label>
+                    <Input id="imageUrl" name="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://..." />
+                    <p className="text-xs text-muted-foreground">Enter a direct image link (Unsplash, Cloudinary, etc.)</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="categoryId">Category</Label>
                         <select
+                            id="categoryId"
                             name="categoryId"
-                            required
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            value={formData.categoryId}
+                            onChange={handleChange}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            required
                         >
                             <option value="">Select Category</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            {categories.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </select>
                     </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Subcategory</label>
+                    <div className="grid gap-2">
+                        <Label htmlFor="subcategoryId">Subcategory</Label>
                         <select
+                            id="subcategoryId"
                             name="subcategoryId"
-                            disabled={!selectedCategory || availableSubcategories.length === 0}
+                            value={formData.subcategoryId}
+                            onChange={handleChange}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={!selectedCategory}
                         >
                             <option value="">Select Subcategory</option>
-                            {availableSubcategories.map(sub => (
-                                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                            {selectedCategory?.subcategories.map(s => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
                         </select>
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Product Image</label>
-                    <div className="space-y-3">
-                        <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={uploading}
-                        />
-                        {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
-                        {imageUrl && (
-                            <div className="relative w-32 h-32 border rounded-lg overflow-hidden">
-                                <Image src={imageUrl} alt="Preview" fill className="object-cover" />
-                            </div>
-                        )}
-                    </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="status">Status</Label>
+                    <select
+                        id="status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="draft">Draft (Hidden)</option>
+                        <option value="published">Published (Live)</option>
+                    </select>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Available Sizes</label>
-                    <div className="flex flex-wrap gap-2">
-                        {AVAILABLE_SIZES.map(size => (
-                            <button
-                                key={size}
-                                type="button"
-                                onClick={() => toggleSize(size)}
-                                className={`px-4 py-2 rounded-md border transition-colors ${selectedSizes.includes(size)
-                                    ? 'bg-primary text-primary-foreground border-primary'
-                                    : 'bg-background hover:bg-muted'
-                                    }`}
-                            >
-                                {size}
-                            </button>
-                        ))}
-                    </div>
+                <div className="flex justify-end gap-4 pt-4">
+                    <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+                    <Button type="submit" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {formData.status === 'published' ? 'Publish Product' : 'Save Draft'}
+                    </Button>
                 </div>
-
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Available Colors</label>
-                    <div className="flex flex-wrap gap-2">
-                        {AVAILABLE_COLORS.map(color => (
-                            <button
-                                key={color}
-                                type="button"
-                                onClick={() => toggleColor(color)}
-                                className={`px-4 py-2 rounded-md border transition-colors ${selectedColors.includes(color)
-                                    ? 'bg-primary text-primary-foreground border-primary'
-                                    : 'bg-background hover:bg-muted'
-                                    }`}
-                            >
-                                {color}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <Button type="submit" disabled={loading || uploading || !imageUrl}>
-                    {loading ? 'Creating...' : 'Create Product'}
-                </Button>
             </form>
         </div>
     )
