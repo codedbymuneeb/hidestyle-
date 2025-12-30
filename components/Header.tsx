@@ -10,12 +10,15 @@ export function Header() {
     return (
         <header className="glass-header">
             <div className="container flex h-16 items-center">
-                <div className="mr-4 hidden md:flex">
-                    <Link href="/" className="mr-6 flex items-center space-x-2">
-                        <span className="hidden font-bold sm:inline-block">HIDESTYLE</span>
+                <div className="mr-4 hidden md:flex items-center">
+                    <Link href="/" className="mr-8 flex items-center space-x-2">
+                        <span className="text-xl font-bold tracking-tight">HIDESTYLE</span>
                     </Link>
-                    <nav className="flex items-center gap-6 text-sm font-medium">
-                        <Link href="/categories" className="transition-colors hover:text-foreground/80 text-foreground/60">Categories</Link>
+                    <nav className="flex items-center gap-8 text-sm font-medium tracking-wide">
+                        <Link href="/products?category=sneakers" className="transition-colors hover:text-primary text-muted-foreground">Sneakers</Link>
+                        <Link href="/products?category=formal" className="transition-colors hover:text-primary text-muted-foreground">Formal Shoes</Link>
+                        <Link href="/products?sort=newest" className="transition-colors hover:text-primary text-muted-foreground">New Arrivals</Link>
+                        <Link href="/products?sort=sale" className="transition-colors hover:text-destructive text-muted-foreground">Sale</Link>
                     </nav>
                 </div>
                 <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">

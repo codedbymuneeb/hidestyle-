@@ -44,32 +44,34 @@ export function ProductCard({ product }: { product: Product }) {
     }
 
     return (
-        <Card className="overflow-hidden group hover:shadow-xl transition-shadow duration-300 border-none">
-            <Link href={href}>
-                <div className="aspect-[3/4] relative overflow-hidden bg-muted">
-                    {images[0] ? (
-                        <Image
-                            src={images[0]}
-                            alt={product.title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                            No Image
-                        </div>
-                    )}
+    return (
+        <div className="group relative">
+            <Link href={href} className="block aspect-[3/4] relative overflow-hidden bg-zinc-100 mb-4">
+                {images[0] ? (
+                    <Image
+                        src={images[0]}
+                        alt={product.title}
+                        fill
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                        No Image
+                    </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+                    <Button onClick={handleAddToCart} className="w-full bg-white text-black hover:bg-zinc-100 font-medium">
+                        Quick Add
+                    </Button>
                 </div>
             </Link>
-            <CardContent className="p-4">
+            <div className="space-y-1">
                 <Link href={href}>
-                    <h3 className="font-semibold text-lg hover:underline">{product.title}</h3>
+                    <h3 className="font-medium text-sm text-zinc-900 group-hover:underline decoration-1 underline-offset-4">{product.title}</h3>
                 </Link>
-                <p className="text-sm text-muted-foreground mt-1">${(product.price / 100).toFixed(2)}</p>
-            </CardContent>
-            <CardFooter className="p-4 pt-0">
-                <Button className="w-full" onClick={handleAddToCart}>Add to Cart</Button>
-            </CardFooter>
-        </Card>
+                <p className="text-sm font-semibold text-zinc-900">${(product.price / 100).toFixed(2)}</p>
+            </div>
+        </div>
     )
 }

@@ -11,6 +11,16 @@ async function main() {
     await prisma.user.deleteMany()
 
     // Categories
+    // Create Admin User
+    await prisma.user.create({
+        data: {
+            name: 'Admin',
+            email: 'admin@hidestyle.com',
+            password: 'password123',
+            role: 'admin',
+        }
+    })
+
     const sneakers = await prisma.category.create({
         data: {
             name: 'Sneakers',

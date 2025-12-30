@@ -14,77 +14,93 @@ export default async function Home() {
     return (
         <div className="flex flex-col min-h-screen">
             {/* Hero Section */}
-            <section className="relative bg-black text-white py-20 lg:py-32 overflow-hidden">
-                {/* Shoe Store Hero Image - Floating Sneakers */}
-                <div className="absolute inset-0 z-0 opacity-50 bg-[url('https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1974')] bg-cover bg-center" />
-                <div className="container relative z-10 flex flex-col items-center text-center space-y-8">
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in-up">
-                        Step Up Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600">Game</span>
+            <section className="relative h-[85vh] flex items-center justify-center bg-zinc-950 text-white overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute inset-0 bg-black/40 z-10" />
+                    <div
+                        className="w-full h-full bg-[url('https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center animate-scale-in"
+                        style={{ animationDuration: '10s' }}
+                    />
+                </div>
+
+                <div className="container relative z-20 text-center space-y-8 max-w-4xl px-4">
+                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter uppercase animate-fade-in-up">
+                        HIDESTYLE
                     </h1>
-                    <p className="max-w-2xl text-lg md:text-xl text-gray-200 font-medium animate-fade-in-up delay-100">
-                        Discover the ultimate collection of performance sneakers and premium formal wear. Your journey starts here.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-200">
-                        <Link href="/categories">
-                            <Button size="lg" className="bg-white text-black hover:bg-white/90 w-full sm:w-auto text-lg px-8 border-none hover:scale-105 transition-transform">
-                                Shop All Shoes
+                    <div className="h-px w-24 bg-white/50 mx-auto" />
+                    <h2 className="text-xl md:text-2xl font-light tracking-wide text-zinc-200 text-balance animate-fade-in-up delay-100">
+                        Premium footwear. Comfort, durability, and modern design.
+                    </h2>
+
+                    <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8 animate-fade-in-up delay-200">
+                        <Link href="/products?sort=best-selling">
+                            <Button size="lg" className="min-w-[200px] h-14 text-base font-semibold bg-white text-black hover:bg-zinc-200 rounded-none border-0">
+                                SHOP BESTSELLERS
                             </Button>
                         </Link>
-                        <Link href="/categories/sneakers">
-                            <Button variant="outline" size="lg" className="border-2 border-white text-white hover:bg-white/20 w-full sm:w-auto text-lg px-8 bg-transparent hover:scale-105 transition-transform">
-                                View Sneakers
+                        <Link href="/products">
+                            <Button variant="outline" size="lg" className="min-w-[200px] h-14 text-base font-semibold text-white border-white hover:bg-white/10 rounded-none bg-transparent">
+                                EXPLORE COLLECTION
                             </Button>
                         </Link>
                     </div>
                 </div>
             </section>
 
-            {/* Features Section */}
-            <section className="container py-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="flex flex-col items-center text-center space-y-4 p-6 bg-muted/30 rounded-lg">
-                    <div className="p-3 bg-primary/10 rounded-full">
-                        <ShoppingBag className="h-8 w-8 text-primary" />
+            {/* Featured Collection */}
+            <section className="py-24 bg-white text-black">
+                <div className="container space-y-12">
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-zinc-100 pb-6">
+                        <div className="space-y-2">
+                            <span className="text-sm font-semibold tracking-widest text-zinc-500 uppercase">This Season</span>
+                            <h3 className="text-4xl font-bold tracking-tight">New Arrivals</h3>
+                        </div>
+                        <Link href="/products?sort=newest" className="group flex items-center text-sm font-medium hover:text-zinc-600 transition-colors">
+                            View all products
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </Link>
                     </div>
-                    <h3 className="text-xl font-bold">Premium Quality</h3>
-                    <p className="text-muted-foreground">Hand-picked materials ensuring comfort and durability.</p>
-                </div>
-                <div className="flex flex-col items-center text-center space-y-4 p-6 bg-muted/30 rounded-lg">
-                    <div className="p-3 bg-primary/10 rounded-full">
-                        <Truck className="h-8 w-8 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold">Fast Shipping</h3>
-                    <p className="text-muted-foreground">Express delivery worldwide within 3-5 business days.</p>
-                </div>
-                <div className="flex flex-col items-center text-center space-y-4 p-6 bg-muted/30 rounded-lg">
-                    <div className="p-3 bg-primary/10 rounded-full">
-                        <Shield className="h-8 w-8 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold">Secure Payment</h3>
-                    <p className="text-muted-foreground">100% secure checkout with Stripe protection.</p>
-                </div>
-            </section>
 
-            {/* Featured Products */}
-            <section className="container py-12 space-y-8">
-                <div className="flex items-center justify-between border-b pb-4">
-                    <h2 className="text-3xl font-bold tracking-tight">Featured Drops</h2>
-                    <Link href="/categories" className="flex items-center text-sm font-medium hover:text-primary transition-colors">
-                        View all <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {featuredProducts.length > 0 ? (
-                        featuredProducts.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))
-                    ) : (
-                        // Fallback placeholders if no products
-                        Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-lg flex items-center justify-center text-muted-foreground">
-                                Product Placeholder
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
+                        {featuredProducts.length > 0 ? (
+                            featuredProducts.map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))
+                        ) : (
+                            <div className="col-span-full py-20 text-center text-zinc-400">
+                                <p>Loading premium selection...</p>
                             </div>
-                        ))
-                    )}
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* Trust Signals */}
+            <section className="bg-zinc-50 border-t border-zinc-100 py-20">
+                <div className="container">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                        <div className="space-y-4">
+                            <div className="mx-auto w-12 h-12 flex items-center justify-center bg-black text-white rounded-full mb-6">
+                                <Truck className="h-5 w-5" />
+                            </div>
+                            <h4 className="text-lg font-bold">Fast Global Shipping</h4>
+                            <p className="text-sm text-zinc-500 max-w-xs mx-auto">Express delivery to 180+ countries with transparent tracking.</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="mx-auto w-12 h-12 flex items-center justify-center bg-black text-white rounded-full mb-6">
+                                <Shield className="h-5 w-5" />
+                            </div>
+                            <h4 className="text-lg font-bold">Secure Checkout</h4>
+                            <p className="text-sm text-zinc-500 max-w-xs mx-auto">Protected by industry-leading encryption and Stripe payments.</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="mx-auto w-12 h-12 flex items-center justify-center bg-black text-white rounded-full mb-6">
+                                <ShoppingBag className="h-5 w-5" />
+                            </div>
+                            <h4 className="text-lg font-bold">Premium Quality</h4>
+                            <p className="text-sm text-zinc-500 max-w-xs mx-auto">Expertly crafted with hand-picked materials for lasting comfort.</p>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
