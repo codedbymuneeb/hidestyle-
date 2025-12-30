@@ -44,7 +44,6 @@ export function ProductCard({ product }: { product: Product }) {
     }
 
     return (
-    return (
         <div className="group relative">
             <Link href={href} className="block aspect-[3/4] relative overflow-hidden bg-zinc-100 mb-4">
                 {images[0] ? (
