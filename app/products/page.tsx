@@ -3,6 +3,9 @@ import { ProductCard } from '@/components/ProductCard'
 
 export default async function AllProductsPage() {
     const products = await prisma.product.findMany({
+        where: {
+            status: 'published'
+        },
         orderBy: { createdAt: 'desc' },
         include: { category: true, subcategory: true }
     })
