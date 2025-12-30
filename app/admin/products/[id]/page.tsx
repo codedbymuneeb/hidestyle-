@@ -32,6 +32,7 @@ interface Product {
     images: string
     sizes: string | null
     colors: string | null
+    status: string
 }
 
 const AVAILABLE_SIZES = ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12']
@@ -48,15 +49,17 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     const [imageUrl, setImageUrl] = useState<string>('')
     const [selectedSizes, setSelectedSizes] = useState<string[]>([])
     const [selectedColors, setSelectedColors] = useState<string[]>([])
+    const [status, setStatus] = useState<string>('draft')
 
     useEffect(() => {
         Promise.all([
-            fetch('/api/admin/categories').then(res => res.json()),
+            fetch('/api/categories').then(res => res.json()), // Updated API endpoint
             fetch(`/api/products/${params.id}`).then(res => res.json())
         ]).then(([categoriesData, productData]) => {
             setCategories(categoriesData)
             setProduct(productData)
             setSelectedCategory(productData.categoryId)
+            setStatus(productData.status || 'draft')
 
             // Parse images
             try {
@@ -120,6 +123,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         data.images = imageUrl
         data.sizes = JSON.stringify(selectedSizes)
         data.colors = JSON.stringify(selectedColors)
+        data.status = status
 
         try {
             const res = await fetch(`/api/products/${params.id}`, {
@@ -130,6 +134,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             if (!res.ok) throw new Error('Failed to update product')
 
             router.push('/admin/products')
+            router.refresh()
         } catch (error) {
             console.error(error)
             alert('Error updating product')
@@ -149,7 +154,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     return (
         <div className="max-w-2xl mx-auto space-y-8 pb-12">
             <h1 className="text-2xl font-bold">Edit Product</h1>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 border p-6 rounded-lg bg-card">
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Product Title</label>
                     <Input name="title" required defaultValue={product.title} />
@@ -174,6 +179,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Price (in cents)</label>
                         <Input name="price" type="number" required defaultValue={product.price} />
+                        <p className="text-xs text-muted-foreground ml-1">Example: 2000 = $20.00</p>
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Inventory</label>
@@ -215,6 +221,19 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                 </div>
 
                 <div className="space-y-2">
+                    <label className="text-sm font-medium">Status</label>
+                    <select
+                        name="status"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="draft">Draft (Hidden)</option>
+                        <option value="published">Published (Live)</option>
+                    </select>
+                </div>
+
+                <div className="space-y-2">
                     <label className="text-sm font-medium">Product Image URL</label>
                     <Input
                         type="text"
@@ -223,7 +242,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                         placeholder="Image URL"
                     />
                     {imageUrl && (
-                        <div className="relative w-32 h-32 border rounded-lg overflow-hidden">
+                        <div className="relative w-32 h-32 border rounded-lg overflow-hidden mt-2">
                             <Image src={imageUrl} alt="Preview" fill className="object-cover" />
                         </div>
                     )}
@@ -267,15 +286,15 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
                     </div>
                 </div>
 
-                <div className="flex gap-2">
-                    <Button type="submit" disabled={submitting}>
+                <div className="flex gap-2 pt-4">
+                    <Button type="submit" disabled={submitting} className={status === 'published' ? '' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}>
                         {submitting ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Updating...
                             </>
                         ) : (
-                            'Update Product'
+                            status === 'published' ? 'Update & Publish' : 'Update Draft'
                         )}
                     </Button>
                     <Button type="button" variant="outline" onClick={() => router.push('/admin/products')}>
