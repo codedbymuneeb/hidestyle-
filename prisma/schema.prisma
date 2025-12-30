@@ -60,19 +60,28 @@ model Product {
 
 model Order {
   id              String   @id @default(cuid())
+  
+  // Customer Details
+  customerName    String
+  customerEmail   String
+  phone           String
+  shippingAddress String
+  
+  // Order Data (JSON since using SQLite/Simple setup for now, ideally separate OrderItem model)
+  items           String   // JSON string: [{ productId, name, price, quantity }]
+  totalAmount     Int      // Stored in cents
+  
+  // Status Tracking
+  paymentMethod   String   @default("cod") // "card", "cod"
+  paymentStatus   String   @default("pending") // "pending", "paid", "failed"
+  orderStatus     String   @default("new") // "new", "processing", "shipped", "delivered"
+  
+  isNew           Boolean  @default(true) // For admin highlighting
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Optional: Link to Registered User if exists
   userId          String?
   user            User?    @relation(fields: [userId], references: [id])
-  items           String   // JSON stringified inputs
-  total           Int      // stored in cents
-  status          String   @default("pending") // pending, paid, shipped, etc.
-  stripeSessionId String?  @unique
-  
-  // COD / Guest Checkout fields
-  customerName    String?
-  customerEmail   String?
-  customerPhone   String?
-  shippingAddress String?
-  paymentMethod   String   @default("card")
-
-  createdAt       DateTime @default(now())
 }

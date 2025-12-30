@@ -33,16 +33,17 @@ export default function CheckoutPage() {
 
         const formData = new FormData(e.currentTarget)
         const data = {
-            name: formData.get('name'),
-            email: formData.get('email'),
+            customerName: formData.get('name'),
+            customerEmail: formData.get('email'),
             phone: formData.get('phone'),
-            address: formData.get('address'),
+            shippingAddress: formData.get('address'),
             items: items,
-            total: cartTotal
+            totalAmount: cartTotal,
+            paymentMethod: 'cod'
         }
 
         try {
-            const res = await fetch('/api/orders/cod', {
+            const res = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -56,7 +57,7 @@ export default function CheckoutPage() {
             })
 
             clearCart()
-            router.push('/checkout/success') // Need to create this or redirect home
+            router.push('/checkout/success')
         } catch (error) {
             toast({
                 title: "Error",
